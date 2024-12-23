@@ -1,5 +1,4 @@
 import {
-  boolean,
   pgTable,
   real,
   timestamp,
@@ -31,7 +30,6 @@ const splitModel = pgTable("split", {
     }),
 
   amount: real().notNull(),
-  isSettled: boolean().default(false),
 
   createdAt: timestamp().notNull().defaultNow(),
   updatedAt: timestamp().notNull().defaultNow(),
@@ -46,10 +44,6 @@ export const selectSplitSchema = createSelectSchema(splitModel, {
     schema.expenseId.describe("Reference to the expense being split"),
   amount: schema =>
     schema.amount.describe("Amount to be paid by this user in the split"),
-  isSettled: schema =>
-    schema.isSettled.describe(
-      "Whether this split amount has been settled/paid",
-    ),
   createdAt: schema =>
     schema.createdAt.describe("Timestamp when the split was created"),
   updatedAt: schema =>
@@ -63,10 +57,6 @@ export const insertSplitSchema = createInsertSchema(splitModel, {
     schema.expenseId.describe("Reference to the expense being split"),
   amount: schema =>
     schema.amount.describe("Amount to be paid by this user in the split"),
-  isSettled: schema =>
-    schema.isSettled.describe(
-      "Whether this split amount has been settled/paid",
-    ),
   createdAt: schema =>
     schema.createdAt.describe("Timestamp when the split was created"),
   updatedAt: schema =>
