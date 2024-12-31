@@ -6,10 +6,18 @@ import { categoryRouter } from "./modules/categories/category.index";
 import { expenseRouter } from "./modules/expenses/expense.index";
 import { groupRouters } from "./modules/group/group.index";
 import { healthCheckRouter } from "./modules/health-check/health-check.index";
+import { settlementsRouter } from "./modules/settlements/settlements.index";
 
 export const app = createApp();
 
-const routesV1 = [authRouter, categoryRouter, groupRouters, activityRouter, expenseRouter];
+const routesV1 = [
+  authRouter,
+  categoryRouter,
+  groupRouters,
+  activityRouter,
+  expenseRouter,
+  settlementsRouter,
+];
 
 configureOpenAPI(app);
 
