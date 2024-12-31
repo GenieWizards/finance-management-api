@@ -15,6 +15,8 @@ import {
   selectExpenseSchema,
 } from "@/db/schemas/expense.model";
 
+import { createExpenseBodySchema } from "./expense.validations";
+
 const tags = ["Expenses"];
 
 export const createExpenseRoute = createRoute({
@@ -26,19 +28,7 @@ export const createExpenseRoute = createRoute({
     requireAuth(),
   ] as const,
   request: {
-    body: jsonContentRequired(
-      insertExpenseSchema
-        .omit({
-          id: true,
-          createdAt: true,
-          updatedAt: true,
-          creatorId: true,
-        })
-        .partial({
-          payerId: true,
-        }),
-      "Expense creation details",
-    ),
+    body: jsonContentRequired(createExpenseBodySchema, "Expense creation details"),
   },
   responses: {
     [HTTPStatusCodes.CREATED]: jsonContent(
