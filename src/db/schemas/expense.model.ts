@@ -44,7 +44,7 @@ const expenseModel = pgTable("expense", {
   }),
   amount: real().notNull(),
   currency: varchar({ length: 3 }).notNull(),
-  splitType: splitTypeEnum("split_type").notNull(),
+  splitType: splitTypeEnum("split_type"),
   description: text(),
 
   createdAt: timestamp().notNull().defaultNow(),

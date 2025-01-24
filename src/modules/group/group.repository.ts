@@ -1,3 +1,6 @@
+import type { SQL } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+
 import { AuthRoles } from "@/common/enums";
 import { db } from "@/db/adapter";
 import type { TInsertGroupSchema } from "@/db/schemas/group.model";
@@ -5,8 +8,6 @@ import groupModel from "@/db/schemas/group.model";
 import { usersToGroupsModel } from "@/db/schemas/user-to-group.model";
 import type { TSelectUserSchema } from "@/db/schemas/user.model";
 import userModel from "@/db/schemas/user.model";
-import type { SQL } from "drizzle-orm";
-import { and, asc, desc, eq, ilike, inArray, sql } from "drizzle-orm";
 
 import type { TGroupQuerySchema } from "./group.schema";
 

@@ -15,6 +15,20 @@
       "when": 1733737956040,
       "tag": "0001_parallel_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1735924524798,
+      "tag": "0002_safe_cobalt_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1736070259247,
+      "tag": "0003_bored_captain_stacy",
+      "breakpoints": true
     }
   ]
 }

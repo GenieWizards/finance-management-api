@@ -1,20 +1,21 @@
-import { ActivityType, AuthRoles } from "@/common/enums";
+import { ActivityType } from "@/common/enums";
 import { logActivity } from "@/common/helpers/activity-log.helper";
 import type { AppRouteHandler } from "@/common/lib/types";
 import { AUTHORIZATION_ERROR_MESSAGE } from "@/common/utils/constants";
 import * as HTTPStatusCodes from "@/common/utils/http-status-codes.util";
 
-import { getUserByIdRepository } from "../users/user.repository";
-import { createExpenseRepository, isCategoryValidToCreateExpense } from "./expense.repository";
+import { createExpenseWithSplitsRepository, createStandaloneExpenseRepository, validateExpensePayloadRepository } from "./expense.repository";
 import type { TCreateExpenseRoute } from "./expense.routes";
 
-export const createExpense: AppRouteHandler<TCreateExpenseRoute> = async (
-  c,
-) => {
+export const createExpense: AppRouteHandler<TCreateExpenseRoute> = async (c) => {
   const logger = c.get("logger");
   const user = c.get("user");
   const payload = c.req.valid("json");
 
+  const { groupId, payerId, splits, splitType } = payload;
+  let expense;
+
+  // validate user
   if (!user) {
     logger.debug("createExpense: User is not authorized to create expense");
     return c.json(
@@ -26,83 +27,41 @@ export const createExpense: AppRouteHandler<TCreateExpenseRoute> = async (
     );
   }
 
-  const { payerId, categoryId } = payload;
-
-  // check if payerId is valid
-  if (payerId) {
-    const payerUser = await getUserByIdRepository(payerId);
-
-    if (!payerUser) {
-      logger.debug("createExpense: Payer not found");
-      return c.json(
-        {
-          success: false,
-          message: "Payer not found",
-        },
-        HTTPStatusCodes.NOT_FOUND,
-      );
-    }
+  // validate payload
+  const result = await validateExpensePayloadRepository(payload, user);
+  if (!result.success) {
+    logger.debug(`createExpense: ${result.message}`);
+    return c.json(
+      {
+        success: false,
+        message: result.message,
+      },
+      result.code as 500,
+    );
   }
 
-  if (categoryId) {
-    const { category, isValid } = await isCategoryValidToCreateExpense(categoryId, payerId, user);
+  const payerUserId = payerId || user.id;
 
-    if (!category) {
-      logger.debug("createExpense: Category not found");
-      return c.json(
-        {
-          success: false,
-          message: "Category not found",
-        },
-        HTTPStatusCodes.NOT_FOUND,
-      );
-    }
+  if (groupId && splits?.length && splitType) {
+    // Create expense with group and splits.
+    const expensePayload = {
+      ...payload,
+      payerId: payerUserId,
+      creatorId: user.id,
+      groupId,
+      splitType,
+    };
 
-    if (!isValid) {
-      logger.debug("createExpense: Category does not belong to the user or the specified payer");
-      return c.json(
-        {
-          success: false,
-          message: "Category does not belong to the user or the specified payer",
-        },
-        HTTPStatusCodes.BAD_REQUEST,
-      );
-    }
-  }
+    expense = await createExpenseWithSplitsRepository(expensePayload, splits);
+  } else {
+    // Create standalone expense (no group, no splits)
+    const expensePayload = {
+      ...payload,
+      payerId: payerUserId,
+      creatorId: user.id,
+    };
 
-  let expense;
-  switch (user.role) {
-    case AuthRoles.USER: {
-      const expensePayload = {
-        ...payload,
-        payerId: payerId || user.id,
-        creatorId: user.id,
-      };
-
-      expense = await createExpenseRepository(expensePayload);
-      break;
-    }
-    case AuthRoles.ADMIN: {
-      // check if payerId exists
-      if (!payerId) {
-        logger.debug("createExpense: Missing payer Id to create expense");
-        return c.json(
-          {
-            success: false,
-            message: "Missing payerId",
-          },
-          HTTPStatusCodes.BAD_REQUEST,
-        );
-      }
-
-      const expensePayload = {
-        ...payload,
-        payerId,
-        creatorId: user.id,
-      };
-      expense = await createExpenseRepository(expensePayload);
-      break;
-    }
+    expense = await createStandaloneExpenseRepository(expensePayload);
   }
 
   if (!expense) {
@@ -129,6 +88,7 @@ export const createExpense: AppRouteHandler<TCreateExpenseRoute> = async (
     },
   });
   logger.debug(`Expense created successfully`);
+
   return c.json(
     {
       success: true,
