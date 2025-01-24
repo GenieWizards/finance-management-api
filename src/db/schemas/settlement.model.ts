@@ -15,7 +15,10 @@ const settlementModel = pgTable("settlement", {
   groupId: varchar({ length: 60 }),
   amount: real().notNull(),
   createdAt: timestamp().notNull().defaultNow(),
-  updatedAt: timestamp().notNull().defaultNow(),
+  updatedAt: timestamp()
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 // Schema for selecting/inserting a settlement
